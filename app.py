@@ -24,13 +24,18 @@ st.markdown("""
     font-weight: bold;
     text-align: center;
 }
+.result-card {
+    padding: 20px;
+    border-radius: 10px;
+    background-color: rgba(255,255,255,0.1);
+}
 </style>
 """, unsafe_allow_html=True)
 
 st.markdown("<div class='title'>🚀 AI-Powered Bug Report Classification System</div>", unsafe_allow_html=True)
 st.write("")
 
-# ================= LOAD MODEL (CORRECTED PATH) =================
+# ================= LOAD MODEL =================
 model = joblib.load("xgboost_bug_report_model.pkl")
 tfidf = joblib.load("tfidf_vectorizer.pkl")
 
@@ -42,43 +47,116 @@ tab1, tab2 = st.tabs(["🔍 Live Prediction", "📊 Model Evaluation"])
 # ======================================================
 
 with tab1:
+
     st.subheader("Paste Bug Report Below")
 
-    user_input = st.text_area("Bug Report Text:", height=180)
+    user_input = st.text_area("Bug Report Text:", height=200)
 
     if st.button("Predict Bug Category"):
 
         if user_input.strip() == "":
             st.warning("Please enter bug report text.")
         else:
+
             vector = tfidf.transform([user_input])
             prediction = model.predict(vector)[0]
-            probability = model.predict_proba(vector)[0][1]
+            probabilities = model.predict_proba(vector)[0]
+            probability = probabilities[1]
 
+            st.markdown("## 🧾 Prediction Result")
+
+            # ---------------- Classification ----------------
             if prediction == 1:
                 st.success("⚡ Performance Related Bug Detected")
             else:
                 st.error("🐞 Non-Performance Bug")
 
-            st.write(f"Confidence Score: {probability:.2f}")
+            # ---------------- Confidence ----------------
+            st.write(f"### Confidence Score: {probability:.2f}")
             st.progress(float(probability))
+
+            # ---------------- Severity ----------------
+            if probability > 0.90:
+                severity = "🔴 P1 - Critical"
+            elif probability > 0.70:
+                severity = "🟠 P2 - High"
+            else:
+                severity = "🟡 P3 - Moderate"
+
+            st.write(f"### Severity Level: {severity}")
+
+            # ---------------- Probability Breakdown ----------------
+            st.write("### 📊 Probability Breakdown")
+            st.write(f"Non-Performance: {probabilities[0]:.2f}")
+            st.write(f"Performance: {probabilities[1]:.2f}")
+
+            # ---------------- Keyword Detection ----------------
+            performance_terms = ["slow", "memory", "cpu", "gpu", "latency", "throughput", "optimization"]
+            detected = [term for term in performance_terms if term in user_input.lower()]
+
+            if detected:
+                st.write("### 🔎 Detected Performance Indicators")
+                st.write(detected)
+
+            # ---------------- Root Cause Suggestion ----------------
+            if "memory" in user_input.lower():
+                suggestion = "Possible memory leak or inefficient memory handling."
+            elif "cpu" in user_input.lower():
+                suggestion = "High CPU utilization due to heavy processing."
+            elif "latency" in user_input.lower():
+                suggestion = "Network or backend processing delay."
+            elif "slow" in user_input.lower():
+                suggestion = "Inefficient algorithm or heavy resource usage."
+            else:
+                suggestion = "Further log and system profiling required."
+
+            st.info(f"🧠 Suggested Root Cause: {suggestion}")
+
+            # ---------------- Suggested Solution ----------------
+            if prediction == 1:
+                solution = """
+                ### ✅ Recommended Optimization Steps:
+                - Optimize algorithm complexity
+                - Check for memory leaks
+                - Profile CPU/GPU usage
+                - Implement caching or batching
+                - Improve database indexing
+                """
+            else:
+                solution = """
+                ### ✅ Recommended Debugging Steps:
+                - Validate input handling
+                - Check exception logs
+                - Verify API responses
+                - Inspect UI event triggers
+                """
+
+            st.success(solution)
+
 
 # ======================================================
 # TAB 2 — MODEL EVALUATION
 # ======================================================
 
 with tab2:
+
     st.subheader("Model Performance Metrics")
 
     try:
-        data = pd.read_csv("Title+Body.csv").fillna("")
+        data = pd.read_csv("data/Title+Body.csv").fillna("")
     except:
-        st.error("Dataset not found in repository.")
+        st.error("Dataset not found in data folder.")
         st.stop()
 
     from sklearn.preprocessing import LabelEncoder
     from sklearn.model_selection import train_test_split
-    from sklearn.metrics import f1_score, roc_auc_score, accuracy_score, precision_score, recall_score
+    from sklearn.metrics import (
+        f1_score,
+        roc_auc_score,
+        accuracy_score,
+        precision_score,
+        recall_score
+    )
 
     le = LabelEncoder()
     data["sentiment"] = le.fit_transform(data["sentiment"])
