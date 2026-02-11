@@ -17,18 +17,22 @@ st.set_page_config(
 st.markdown("""
 <style>
 .stApp {
-    background: linear-gradient(to right, #1f4037, #99f2c8);
+    background-color: #f8f9fa;
 }
+
 .title {
     font-size: 38px;
     font-weight: bold;
     text-align: center;
+    color: #222222;
 }
-.result-card {
-    padding: 20px;
-    border-radius: 10px;
-    background-color: rgba(255,255,255,0.1);
+
+.section-header {
+    font-size: 24px;
+    font-weight: 600;
+    color: #333333;
 }
+
 </style>
 """, unsafe_allow_html=True)
 
@@ -48,7 +52,7 @@ tab1, tab2 = st.tabs(["🔍 Live Prediction", "📊 Model Evaluation"])
 
 with tab1:
 
-    st.subheader("Paste Bug Report Below")
+    st.markdown("<div class='section-header'>Paste Bug Report Below</div>", unsafe_allow_html=True)
 
     user_input = st.text_area("Bug Report Text:", height=200)
 
@@ -133,19 +137,18 @@ with tab1:
 
             st.success(solution)
 
-
 # ======================================================
 # TAB 2 — MODEL EVALUATION
 # ======================================================
 
 with tab2:
 
-    st.subheader("Model Performance Metrics")
+    st.markdown("<div class='section-header'>Model Performance Metrics</div>", unsafe_allow_html=True)
 
     try:
-        data = pd.read_csv("data/Title+Body.csv").fillna("")
+        data = pd.read_csv("Title+Body.csv").fillna("")
     except:
-        st.error("Dataset not found in data folder.")
+        st.error("Dataset file not found.")
         st.stop()
 
     from sklearn.preprocessing import LabelEncoder
