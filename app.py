@@ -1,3 +1,4 @@
+%%writefile app.py
 
 import streamlit as st
 import joblib
@@ -31,9 +32,9 @@ st.markdown("""
 st.markdown("<div class='title'>🚀 AI-Powered Bug Report Classification System</div>", unsafe_allow_html=True)
 st.write("")
 
-# ================= LOAD MODEL =================
-model = joblib.load("models/xgboost_bug_report_model.pkl")
-tfidf = joblib.load("models/tfidf_vectorizer.pkl")
+# ================= LOAD MODEL (CORRECTED PATH) =================
+model = joblib.load("xgboost_bug_report_model.pkl")
+tfidf = joblib.load("tfidf_vectorizer.pkl")
 
 # ================= TABS =================
 tab1, tab2 = st.tabs(["🔍 Live Prediction", "📊 Model Evaluation"])
@@ -71,11 +72,10 @@ with tab1:
 with tab2:
     st.subheader("Model Performance Metrics")
 
-    # Load dataset for evaluation
     try:
-        data = pd.read_csv("data/Title+Body.csv").fillna("")
+        data = pd.read_csv("Title+Body.csv").fillna("")
     except:
-        st.error("Dataset not found in data folder.")
+        st.error("Dataset not found in repository.")
         st.stop()
 
     from sklearn.preprocessing import LabelEncoder
@@ -137,8 +137,8 @@ with tab2:
 
     st.info("""
     Confusion Matrix Explanation:
-    - Top Left  → True Negatives  
-    - Top Right → False Positives  
-    - Bottom Left → False Negatives  
-    - Bottom Right → True Positives  
+    - Top Left  → True Negatives
+    - Top Right → False Positives
+    - Bottom Left → False Negatives
+    - Bottom Right → True Positives
     """)
